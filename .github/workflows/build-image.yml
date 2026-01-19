@@ -3,7 +3,7 @@ name: Build and Push Image
 on:
   push:
     branches: ["cicd"]
-  workflow_dispatch: # 수동 실행 가능
+  workflow_dispatch:
 
 jobs:
   build-push:
@@ -11,9 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -24,21 +21,51 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Start Timer
-        run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+      # ----------------------------------------------------------------
+      # 1. Benchmark: Local Build (Legacy)
+      # ----------------------------------------------------------------
+      - name: ⏱️ Benchmark - Local Build
+        id: local_build
+        run: |
+          START=$(date +%s)
+          docker build -f packages/backend/Dockerfile.local -t benchmark-local .
+          END=$(date +%s)
+          
+          echo "time=$((END - START))" >> $GITHUB_OUTPUT
+          SIZE=$(docker images benchmark-local --format "{{.Size}}")
+          echo "size=$SIZE" >> $GITHUB_OUTPUT
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./packages/backend/Dockerfile.dev # 사용자 실수로 local로 바꾼 것을 dev로 원복 (최적화 버전)
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web23-backend:latest
+      # ----------------------------------------------------------------
+      # 2. Benchmark: Dev Build (Optimized) & Prepare for Push
+      # ----------------------------------------------------------------
+      - name: ⏱️ Benchmark - Dev Build
+        id: dev_build
+        run: |
+          START=$(date +%s)
+          # Push할 태그로 빌드
+          docker build -f packages/backend/Dockerfile.dev -t ${{ secrets.DOCKER_USERNAME }}/web23-backend:latest .
+          END=$(date +%s)
+          
+          echo "time=$((END - START))" >> $GITHUB_OUTPUT
+          SIZE=$(docker images ${{ secrets.DOCKER_USERNAME }}/web23-backend:latest --format "{{.Size}}")
+          echo "size=$SIZE" >> $GITHUB_OUTPUT
 
-      - name: End Timer & Report
+      # 3. Push Image (Dev Build 결과 활용)
+      - name: Push Image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/web23-backend:latest
+
+      # ----------------------------------------------------------------
+      # 4. Report Result
+      # ----------------------------------------------------------------
+      - name: 📊 Generate Benchmark Report
         if: always()
         run: |
-          BUILD_END=$(date +%s)
-          DURATION=$((BUILD_END - BUILD_START))
-          echo "⏱️ Build & Push Time: ${DURATION} seconds" >> $GITHUB_STEP_SUMMARY
-          echo "Build finished in ${DURATION}s"
+          echo "## 🚀 Docker Build Benchmark Result" >> $GITHUB_STEP_SUMMARY
+          echo "| Feature | Local (Legacy) | Dev (Optimized) |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Build Time** | ${{ steps.local_build.outputs.time }}s | ${{ steps.dev_build.outputs.time }}s |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Image Size** | ${{ steps.local_build.outputs.size }} | ${{ steps.dev_build.outputs.size }} |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> **Note**: 'Dev' build includes production optimization(pnpm deploy), so build time might be slightly longer, but **Image Size** should be much smaller." >> $GITHUB_STEP_SUMMARY
