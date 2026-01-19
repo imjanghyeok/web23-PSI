@@ -2,9 +2,9 @@ name: Monorepo pnpm CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main", "develop", "cicd"]
   pull_request:
-    branches: ["main", "develop"]
+    branches: ["main", "develop", "cicd"]
 
 jobs:
   ci-pipeline:
@@ -48,16 +48,7 @@ jobs:
           path: "packages/**/junit.xml"
           reporter: jest-junit
 
-      # 3. 도커 푸시 (인스턴스 생기기 전까지 비활성화)
-      - name: Docker Login & Push (Backend)
-        if: false
-        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "${{ secrets.NCP_SECRET_KEY }}" | docker login ${{ secrets.DOCKER_REGISTRY }} -u ${{ secrets.NCP_ACCESS_KEY }} --password-stdin
-          docker build -t ${{ secrets.DOCKER_REGISTRY }}/backend:latest -f ./packages/backend/Dockerfile .
-          docker push ${{ secrets.DOCKER_REGISTRY }}/backend:latest
-
-      # 4. 요약 현황판
+      # 3. 요약 현황판
       - name: 📊 CI Summary
         if: always()
         run: |
