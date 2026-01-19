@@ -2,7 +2,7 @@ name: Build and Push Image
 
 on:
   push:
-    branches: ["cicd"]
+    branches: ["develop", "main"]
   workflow_dispatch:
 
 jobs:

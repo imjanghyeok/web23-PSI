@@ -35,9 +35,8 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       # 1. 린트, 빌드, 테스트 한 번에 실행 (변경된 패키지만)
-      # 1. 린트, 빌드 (변경된 패키지만)
       - name: Run Lint & Build (Affected)
-        run: npx turbo run lint build --filter=...[origin/main]
+        run: npx turbo run lint build --filter=...[origin/develop]
 
       # 2. 테스트 (항상 실행 - 리포트 생성을 위해)
       # 필터(...[origin/main])를 쓰면 변경사항 없을 때 테스트가 안 돌아가서 리포트 파일이 안 생깁니다.
