@@ -1,20 +1,4 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: web23-mysql-prod
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - '${DB_PORT}:${DB_PORT}'
-    volumes:
-      - mysql_data_prod:/var/lib/mysql
-    networks:
-      - web23-network-prod
-
   backend:
     image: ${DOCKER_USERNAME}/web23-backend:${IMAGE_TAG}
     container_name: web23-backend-prod
