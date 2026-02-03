@@ -9,13 +9,8 @@ services:
       - '${PORT}:${PORT}'
     env_file:
       - .env
-    depends_on:
-      - mysql
     networks:
       - web23-network-prod
-
-volumes:
-  mysql_data_prod:
 
 networks:
   web23-network-prod:
