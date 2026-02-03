@@ -61,10 +61,10 @@ jobs:
             
             # 4. 배포 (이미지 Pull & Up)
             echo "Download new image ($IMAGE_TAG)..."
-            docker-compose -f packages/backend/docker-compose.prod.yml pull
+            docker compose -f packages/backend/docker-compose.prod.yml pull
             
             echo "Deploy containers..."
-            docker-compose -f packages/backend/docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f packages/backend/docker-compose.prod.yml up -d --remove-orphans
             
             # 5. 정리 (이전 버전 이미지 삭제)
             docker image prune -a -f
