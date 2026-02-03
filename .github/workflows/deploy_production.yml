@@ -45,7 +45,7 @@ jobs:
             
             # 1. 프로젝트 디렉토리 준비
             if [ ! -d "web23-PSI" ]; then
-              git clone https://github.com/boostcampwm2025/web23-PSI.git
+              git clone https://github.com/imjanghyeok/web23-PSI.git
             fi
             cd web23-PSI
             
